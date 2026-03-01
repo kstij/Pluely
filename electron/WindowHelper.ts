@@ -86,10 +86,10 @@ export class WindowHelper {
       show: false, // Start hidden, then show after setup
       alwaysOnTop: true,
       frame: false,
-      transparent: true,
+      transparent: false,
       fullscreenable: false,
       hasShadow: false,
-      backgroundColor: "#00000000",
+      backgroundColor: "#000000",
       focusable: true,
       resizable: true,
       movable: true,

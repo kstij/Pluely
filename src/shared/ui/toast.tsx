@@ -1,6 +1,6 @@
 import * as React from "react"
 import * as ToastPrimitive from "@radix-ui/react-toast"
-import { cn } from "../../lib/utils"
+import { cn } from "../lib/utils"
 import { X } from "lucide-react"
 
 const ToastProvider = ToastPrimitive.Provider
@@ -34,9 +34,9 @@ interface ToastProps
 }
 
 const toastVariants: Record<ToastVariant, string> = {
-  neutral: "bg-yellow-500 text-white",
-  success: "bg-green-500 text-white",
-  error: "bg-red-500 text-white"
+  neutral: "bg-black text-white border border-white/20",
+  success: "bg-black text-white border border-white/20",
+  error: "bg-black text-white border border-white/20"
 }
 
 const Toast = React.forwardRef<
@@ -46,7 +46,7 @@ const Toast = React.forwardRef<
   <ToastPrimitive.Root
     ref={ref}
     className={cn(
-      "group fixed top-4 left-4 z-50 w-auto max-w-sm px-4 py-2 rounded-lg shadow-lg animate-in fade-in slide-in-from-bottom",
+      "group fixed top-4 left-4 z-50 w-auto max-w-sm px-4 py-2 shadow-lg animate-in fade-in slide-in-from-bottom font-mono",
       toastVariants[variant],
       className
     )}
