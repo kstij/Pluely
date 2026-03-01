@@ -11,8 +11,9 @@ If you’re looking for a hosted desktop recording API, consider checking out [R
 ### Prerequisites
 - Make sure you have Node.js installed on your computer
 - Git installed on your computer  
-- **Either** a Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- **Or** Ollama installed locally for private LLM usage (recommended for privacy)
+- **Option 1:** Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
+- **Option 2:** Ollama installed locally for private LLM usage
+- **Option 3 (Recommended for Hackathons):** Vision Agents with Stream API (see setup below)
 
 ### Installation Steps
 
@@ -34,6 +35,13 @@ npm install
 
 3. Set up environment variables:
    - Create a file named `.env` in the root folder
+   
+   **For Vision Agents (Recommended for Hackathons):**
+   ```env
+   USE_VISION_AGENTS=true
+   VISION_AGENT_URL=http://127.0.0.1:8765
+   GEMINI_API_KEY=your_api_key_here
+   ```
    
    **For Gemini (Cloud AI):**
    ```env
@@ -92,6 +100,65 @@ The built app will be in the `release` folder.
 - Requires API key and internet
 - Data sent to Google servers
 - Usage costs apply
+
+### GetStream Vision Agents (Recommended for Hackathons)
+**Pros:**
+- Real-time video AI with <30ms latency
+- Built on Stream's edge network
+- Supports Gemini Realtime, OpenAI, and more
+- Voice interaction capabilities (STT/TTS)
+
+**Setup:**
+
+1. Install uv (Python package manager):
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+```
+
+2. Set up the Vision backend:
+```bash
+cd vision-backend
+cp .env.example .env
+# Edit .env with your API keys (GEMINI_API_KEY required)
+```
+
+3. Install Python dependencies:
+```bash
+uv venv
+source .venv/bin/activate
+uv pip install fastapi uvicorn websockets python-dotenv pillow google-generativeai
+```
+
+4. Configure root `.env`:
+```env
+USE_VISION_AGENTS=true
+VISION_AGENT_URL=http://127.0.0.1:8765
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+**Running with Vision Agents:**
+
+```bash
+# Terminal 1: Start Vision backend
+cd vision-backend
+source .venv/bin/activate
+python server.py
+
+# Terminal 2: Start Electron app
+npm start
+```
+
+Or use the combined command (requires both terminals):
+```bash
+npm run start:vision
+```
+
+**Verify it's working:**
+```bash
+curl http://127.0.0.1:8765/health
+# Should return: {"status":"healthy","vision_agents":false,"gemini":true}
+```
 
 ### ⚠️ Important Notes
 

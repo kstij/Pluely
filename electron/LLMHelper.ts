@@ -1,26 +1,59 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai"
 import fs from "fs"
+import { VisionAgentHelper } from "./VisionAgentHelper"
 
 interface OllamaResponse {
   response: string
   done: boolean
 }
 
+interface VisionAgentAnalysis {
+  context: string
+  problem_statement: string
+  key_points: string[]
+  suggested_responses: Array<{ option: string; reasoning: string }>
+  action_items: string[]
+  confidence: number
+}
+
 export class LLMHelper {
   private model: GenerativeModel | null = null
   private readonly systemPrompt = `You are Wingman AI, a helpful, proactive assistant for any kind of problem or situation (not just coding). For any user input, analyze the situation, provide a clear problem statement, relevant context, and suggest several possible responses or actions the user could take next. Always explain your reasoning. Present your suggestions as a list of options or next steps.`
   private useOllama: boolean = false
+  private useVisionAgents: boolean = false
   private ollamaModel: string = "llama3.2"
   private ollamaUrl: string = "http://localhost:11434"
+  private visionAgentHelper: VisionAgentHelper | null = null
+  private visionAgentUrl: string = "http://127.0.0.1:8765"
 
-  constructor(apiKey?: string, useOllama: boolean = false, ollamaModel?: string, ollamaUrl?: string) {
+  constructor(
+    apiKey?: string,
+    useOllama: boolean = false,
+    ollamaModel?: string,
+    ollamaUrl?: string,
+    useVisionAgents: boolean = false,
+    visionAgentUrl?: string
+  ) {
     this.useOllama = useOllama
-    
-    if (useOllama) {
+    this.useVisionAgents = useVisionAgents
+
+    if (useVisionAgents) {
+      this.visionAgentUrl = visionAgentUrl || "http://127.0.0.1:8765"
+      this.visionAgentHelper = new VisionAgentHelper({
+        serverUrl: this.visionAgentUrl,
+        wsUrl: this.visionAgentUrl.replace('http', 'ws') + '/ws'
+      })
+      console.log(`[LLMHelper] Using Vision Agents at ${this.visionAgentUrl}`)
+      // Also initialize Gemini as fallback if API key provided
+      if (apiKey) {
+        const genAI = new GoogleGenerativeAI(apiKey)
+        this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+      }
+    } else if (useOllama) {
       this.ollamaUrl = ollamaUrl || "http://localhost:11434"
       this.ollamaModel = ollamaModel || "gemma:latest" // Default fallback
       console.log(`[LLMHelper] Using Ollama with model: ${this.ollamaModel}`)
-      
+
       // Auto-detect and use first available model if specified model doesn't exist
       this.initializeOllamaModel()
     } else if (apiKey) {
@@ -28,7 +61,7 @@ export class LLMHelper {
       this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
       console.log("[LLMHelper] Using Google Gemini")
     } else {
-      throw new Error("Either provide Gemini API key or enable Ollama mode")
+      throw new Error("Either provide Gemini API key, enable Ollama mode, or enable Vision Agents")
     }
   }
 
@@ -124,7 +157,7 @@ export class LLMHelper {
   public async extractProblemFromImages(imagePaths: string[]) {
     try {
       const imageParts = await Promise.all(imagePaths.map(path => this.fileToGenerativePart(path)))
-      
+
       const prompt = `${this.systemPrompt}\n\nYou are a wingman. Please analyze these images and extract the following information in JSON format:\n{
   "problem_statement": "A clear statement of the problem or situation depicted in the images.",
   "context": "Relevant background or context from the images.",
@@ -171,7 +204,7 @@ export class LLMHelper {
   public async debugSolutionWithImages(problemInfo: any, currentCode: string, debugImagePaths: string[]) {
     try {
       const imageParts = await Promise.all(debugImagePaths.map(path => this.fileToGenerativePart(path)))
-      
+
       const prompt = `${this.systemPrompt}\n\nYou are a wingman. Given:\n1. The original problem or situation: ${JSON.stringify(problemInfo, null, 2)}\n2. The current response or approach: ${currentCode}\n3. The debug information in the provided images\n\nPlease analyze the debug information and provide feedback in this JSON format:\n{
   "solution": {
     "code": "The code or main answer here.",
@@ -234,6 +267,27 @@ export class LLMHelper {
   }
 
   public async analyzeImageFile(imagePath: string) {
+    // Use Vision Agents if enabled
+    if (this.useVisionAgents && this.visionAgentHelper) {
+      try {
+        console.log("[LLMHelper] Using Vision Agents for image analysis")
+        const analysis = await this.visionAgentHelper.analyzeImage(imagePath)
+
+        // Convert Vision Agent response to expected format
+        const text = this.formatVisionAgentResponse(analysis as VisionAgentAnalysis)
+        return {
+          text,
+          timestamp: Date.now(),
+          visionAgentData: analysis // Include raw data for advanced usage
+        }
+      } catch (error) {
+        console.error("[LLMHelper] Vision Agents error, falling back to Gemini:", error)
+        // Fall through to Gemini if Vision Agents fails and model is available
+        if (!this.model) throw error
+      }
+    }
+
+    // Fallback to Gemini
     try {
       const imageData = await fs.promises.readFile(imagePath);
       const imagePart = {
@@ -251,6 +305,74 @@ export class LLMHelper {
       console.error("Error analyzing image file:", error);
       throw error;
     }
+  }
+
+  /**
+   * Format Vision Agent analysis into readable text
+   */
+  private formatVisionAgentResponse(analysis: VisionAgentAnalysis): string {
+    const parts: string[] = []
+
+    if (analysis.context) {
+      parts.push(`**Context:** ${analysis.context}`)
+    }
+
+    if (analysis.problem_statement) {
+      parts.push(`\n**What I see:** ${analysis.problem_statement}`)
+    }
+
+    if (analysis.key_points && analysis.key_points.length > 0) {
+      parts.push(`\n**Key points:**`)
+      analysis.key_points.forEach(point => parts.push(`• ${point}`))
+    }
+
+    if (analysis.suggested_responses && analysis.suggested_responses.length > 0) {
+      parts.push(`\n**Suggested responses:**`)
+      analysis.suggested_responses.forEach((resp, i) => {
+        parts.push(`${i + 1}. ${resp.option}`)
+        if (resp.reasoning) parts.push(`   _${resp.reasoning}_`)
+      })
+    }
+
+    if (analysis.action_items && analysis.action_items.length > 0) {
+      parts.push(`\n**Action items:**`)
+      analysis.action_items.forEach(item => parts.push(`→ ${item}`))
+    }
+
+    return parts.join('\n')
+  }
+
+  /**
+   * Analyze image using Vision Agents with structured output
+   */
+  public async analyzeImageWithVisionAgents(imagePath: string): Promise<VisionAgentAnalysis | null> {
+    if (!this.visionAgentHelper) {
+      console.warn("[LLMHelper] Vision Agents not configured")
+      return null
+    }
+
+    try {
+      return await this.visionAgentHelper.analyzeImage(imagePath) as VisionAgentAnalysis
+    } catch (error) {
+      console.error("[LLMHelper] Vision Agents analysis error:", error)
+      throw error
+    }
+  }
+
+  /**
+   * Check if Vision Agents backend is available
+   */
+  public async checkVisionAgentsHealth(): Promise<boolean> {
+    if (!this.visionAgentHelper) return false
+    return this.visionAgentHelper.checkHealth()
+  }
+
+  /**
+   * Connect to Vision Agents WebSocket for real-time updates
+   */
+  public async connectVisionAgents(): Promise<boolean> {
+    if (!this.visionAgentHelper) return false
+    return this.visionAgentHelper.connect()
   }
 
   public async chatWithGemini(message: string): Promise<string> {
@@ -280,11 +402,11 @@ export class LLMHelper {
 
   public async getOllamaModels(): Promise<string[]> {
     if (!this.useOllama) return [];
-    
+
     try {
       const response = await fetch(`${this.ollamaUrl}/api/tags`);
       if (!response.ok) throw new Error('Failed to fetch models');
-      
+
       const data = await response.json();
       return data.models?.map((model: any) => model.name) || [];
     } catch (error) {
@@ -293,25 +415,49 @@ export class LLMHelper {
     }
   }
 
-  public getCurrentProvider(): "ollama" | "gemini" {
+  public getCurrentProvider(): "ollama" | "gemini" | "vision-agents" {
+    if (this.useVisionAgents) return "vision-agents";
     return this.useOllama ? "ollama" : "gemini";
   }
 
   public getCurrentModel(): string {
+    if (this.useVisionAgents) return "vision-agents (Gemini Realtime)";
     return this.useOllama ? this.ollamaModel : "gemini-2.0-flash";
+  }
+
+  public isUsingVisionAgents(): boolean {
+    return this.useVisionAgents;
+  }
+
+  public async switchToVisionAgents(url?: string): Promise<void> {
+    this.visionAgentUrl = url || "http://127.0.0.1:8765";
+    this.visionAgentHelper = new VisionAgentHelper({
+      serverUrl: this.visionAgentUrl,
+      wsUrl: this.visionAgentUrl.replace('http', 'ws') + '/ws'
+    });
+
+    // Check if backend is available
+    const isHealthy = await this.visionAgentHelper.checkHealth();
+    if (!isHealthy) {
+      throw new Error(`Vision Agents backend not available at ${this.visionAgentUrl}. Make sure the Python server is running.`);
+    }
+
+    this.useVisionAgents = true;
+    this.useOllama = false;
+    console.log(`[LLMHelper] Switched to Vision Agents at ${this.visionAgentUrl}`);
   }
 
   public async switchToOllama(model?: string, url?: string): Promise<void> {
     this.useOllama = true;
     if (url) this.ollamaUrl = url;
-    
+
     if (model) {
       this.ollamaModel = model;
     } else {
       // Auto-detect first available model
       await this.initializeOllamaModel();
     }
-    
+
     console.log(`[LLMHelper] Switched to Ollama: ${this.ollamaModel} at ${this.ollamaUrl}`);
   }
 
@@ -320,11 +466,11 @@ export class LLMHelper {
       const genAI = new GoogleGenerativeAI(apiKey);
       this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     }
-    
+
     if (!this.model && !apiKey) {
       throw new Error("No Gemini API key provided and no existing model instance");
     }
-    
+
     this.useOllama = false;
     console.log("[LLMHelper] Switched to Gemini");
   }

@@ -14,7 +14,11 @@
     "app:build": "npm run build && electron-builder",
     "watch": "tsc -p electron/tsconfig.json --watch",
     "start": "npm run app:dev",
-    "dist": "npm run app:build"
+    "dist": "npm run app:build",
+    "vision:setup": "cd vision-backend && uv sync",
+    "vision:start": "cd vision-backend && uv run python server.py",
+    "start:vision": "concurrently \"npm run vision:start\" \"npm run app:dev\"",
+    "vision:agent": "cd vision-backend && uv run python agent.py"
   },
   "build": {
     "appId": "com.electron.meeting-notes",
@@ -115,6 +119,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/screenshot-desktop": "^1.12.3",
     "@types/uuid": "^9.0.8",
+    "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^8.14.0",
     "@typescript-eslint/parser": "^8.14.0",
     "@vitejs/plugin-react": "^4.3.3",
@@ -142,6 +147,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "diff": "^7.0.0",
+    "dotenv": "^16.4.7",
     "form-data": "^4.0.1",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
@@ -154,6 +160,7 @@
     "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.4",
     "tesseract.js": "^5.0.5",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "ws": "^8.16.0"
   }
 }

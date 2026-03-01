@@ -1,0 +1,19 @@
+[project]
+name = "cluely-vision-backend"
+version = "0.1.0"
+description = "Vision Agents backend for Cluely-like assistant"
+requires-python = ">=3.10"
+dependencies = [
+    "vision-agents[getstream,gemini,deepgram,elevenlabs]>=0.3.8",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "websockets>=12.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
+    "google-generativeai>=0.4.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]

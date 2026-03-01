@@ -18,19 +18,24 @@ export class ProcessingHelper {
 
   constructor(appState: AppState) {
     this.appState = appState
-    
-    // Check if user wants to use Ollama
+
+    // Check which provider to use (priority: Vision Agents > Ollama > Gemini)
+    const useVisionAgents = process.env.USE_VISION_AGENTS === "true"
+    const visionAgentUrl = process.env.VISION_AGENT_URL || "http://127.0.0.1:8765"
     const useOllama = process.env.USE_OLLAMA === "true"
-    const ollamaModel = process.env.OLLAMA_MODEL // Don't set default here, let LLMHelper auto-detect
+    const ollamaModel = process.env.OLLAMA_MODEL
     const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434"
-    
-    if (useOllama) {
+    const apiKey = process.env.GEMINI_API_KEY
+
+    if (useVisionAgents) {
+      console.log("[ProcessingHelper] Initializing with Vision Agents")
+      this.llmHelper = new LLMHelper(apiKey, false, undefined, undefined, true, visionAgentUrl)
+    } else if (useOllama) {
       console.log("[ProcessingHelper] Initializing with Ollama")
       this.llmHelper = new LLMHelper(undefined, true, ollamaModel, ollamaUrl)
     } else {
-      const apiKey = process.env.GEMINI_API_KEY
       if (!apiKey) {
-        throw new Error("GEMINI_API_KEY not found in environment variables. Set GEMINI_API_KEY or enable Ollama with USE_OLLAMA=true")
+        throw new Error("GEMINI_API_KEY not found. Set GEMINI_API_KEY, enable Ollama with USE_OLLAMA=true, or enable Vision Agents with USE_VISION_AGENTS=true")
       }
       console.log("[ProcessingHelper] Initializing with Gemini")
       this.llmHelper = new LLMHelper(apiKey, false)
