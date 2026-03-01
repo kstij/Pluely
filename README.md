@@ -50,8 +50,8 @@ uv pip install fastapi uvicorn websockets python-dotenv pillow google-generative
 **1. Vision Backend** (`vision-backend/.env`):
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-STREAM_API_KEY=your_stream_api_key
-STREAM_API_SECRET=your_stream_api_secret
+STREAM_API_KEY=llama3.2
+STREAM_API_SECRET=xr79f7z4st88x34yn9yn8qm6uzpnxrhk2csqbw5p4p7yf8a54v7j32hate79xwwb
 HOST=127.0.0.1
 PORT=8765
 ```

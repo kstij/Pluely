@@ -1,8 +1,9 @@
-import { ToastProvider } from "./components/ui/toast"
-import Queue from "./_pages/Queue"
+import { ToastProvider } from "./shared/ui/toast"
+import Queue from "./features/Queue/QueuePage"
 import { ToastViewport } from "@radix-ui/react-toast"
 import { useEffect, useRef, useState } from "react"
-import Solutions from "./_pages/Solutions"
+import Solutions from "./features/Solutions/SolutionsPage"
+import DebugPage from "./features/Debug/DebugPage"
 import { QueryClient, QueryClientProvider } from "react-query"
 
 declare global {

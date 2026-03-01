@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useQuery } from "react-query"
-import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
+import ScreenshotQueue from "./components/ScreenshotQueue"
 import {
   Toast,
   ToastTitle,
   ToastDescription,
   ToastVariant,
   ToastMessage
-} from "../components/ui/toast"
-import QueueCommands from "../components/Queue/QueueCommands"
-import ModelSelector from "../components/ui/ModelSelector"
+} from "../../shared/ui/toast"
+import QueueCommands from "./components/QueueCommands"
+import ModelSelector from "../LLM/components/ModelSelector"
 
 interface QueueProps {
   setView: React.Dispatch<React.SetStateAction<"queue" | "solutions" | "debug">>
@@ -235,7 +235,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
             <ToastTitle>{toastMessage.title}</ToastTitle>
             <ToastDescription>{toastMessage.description}</ToastDescription>
           </Toast>
-          <div className="w-fit">
+          <div className="w-fit mx-auto">
             <QueueCommands
               screenshots={screenshots}
               onTooltipVisibilityChange={handleTooltipVisibilityChange}
@@ -252,15 +252,15 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
           
           {/* Conditional Chat Interface */}
           {isChatOpen && (
-            <div className="mt-4 w-full mx-auto liquid-glass chat-container p-4 flex flex-col">
-            <div className="flex-1 overflow-y-auto mb-3 p-3 rounded-lg bg-white/10 backdrop-blur-md max-h-64 min-h-[120px] glass-content border border-white/20 shadow-lg">
+            <div className="mt-4 w-full mx-auto bg-black border border-white/20 chat-container p-4 flex flex-col">
+            <div className="flex-1 overflow-y-auto mb-3 scroller">
               {chatMessages.length === 0 ? (
-                <div className="text-sm text-gray-600 text-center mt-8">
-                  💬 Chat with {currentModel.provider === "ollama" ? "🏠" : "☁️"} {currentModel.model}
-                  <br />
-                  <span className="text-xs text-gray-500">Take a screenshot (Cmd+H) for automatic analysis</span>
-                  <br />
-                  <span className="text-xs text-gray-500">Click ⚙️ Models to switch AI providers</span>
+                <div className="flex flex-col items-center justify-center p-8 text-center opacity-50 space-y-2">
+                  <div className="text-xs font-mono uppercase tracking-[0.2em] text-white">System Idle</div>
+                  <div className="w-8 h-px bg-white/20"></div>
+                  <div className="text-[10px] font-mono text-gray-400">
+                    {currentModel.provider === "ollama" ? "LOCAL_PROVIDER" : "CLOUD_PROVIDER"} :: {currentModel.model.toUpperCase()}
+                  </div>
                 </div>
               ) : (
                 chatMessages.map((msg, idx) => (
@@ -269,12 +269,12 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                     className={`w-full flex ${msg.role === "user" ? "justify-end" : "justify-start"} mb-3`}
                   >
                     <div
-                      className={`max-w-[80%] px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm border ${
+                      className={`max-w-[85%] px-4 py-2 text-xs font-mono border ${
                         msg.role === "user" 
-                          ? "bg-gray-700/80 text-gray-100 ml-12 border-gray-600/40" 
-                          : "bg-white/85 text-gray-700 mr-12 border-gray-200/50"
+                          ? "bg-white text-black border-white" 
+                          : "bg-black text-white border-white/20"
                       }`}
-                      style={{ wordBreak: "break-word", lineHeight: "1.4" }}
+                      style={{ wordBreak: "break-word", lineHeight: "1.5" }}
                     >
                       {msg.text}
                     </div>
@@ -283,19 +283,15 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
               )}
               {chatLoading && (
                 <div className="flex justify-start mb-3">
-                  <div className="bg-white/85 text-gray-600 px-3 py-1.5 rounded-xl text-xs backdrop-blur-sm border border-gray-200/50 shadow-md mr-12">
-                    <span className="inline-flex items-center">
-                      <span className="animate-pulse text-gray-400">●</span>
-                      <span className="animate-pulse animation-delay-200 text-gray-400">●</span>
-                      <span className="animate-pulse animation-delay-400 text-gray-400">●</span>
-                      <span className="ml-2">{currentModel.model} is replying...</span>
-                    </span>
+                  <div className="bg-transparent text-white border border-white/20 px-4 py-2 text-[10px] font-mono uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-2 h-2 bg-white animate-pulse"></span>
+                    Generating Response...
                   </div>
                 </div>
               )}
             </div>
             <form
-              className="flex gap-2 items-center glass-content"
+              className="flex gap-0 items-stretch border border-white/20"
               onSubmit={e => {
                 e.preventDefault();
                 handleChatSend();
@@ -303,30 +299,29 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
             >
               <input
                 ref={chatInputRef}
-                className="flex-1 rounded-lg px-3 py-2 bg-white/25 backdrop-blur-md text-gray-800 placeholder-gray-500 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400/60 border border-white/40 shadow-lg transition-all duration-200"
-                placeholder="Type your message..."
+                className="flex-1 px-4 py-3 bg-black text-white placeholder-gray-600 text-xs font-mono focus:outline-none focus:bg-white/5 transition-all uppercase"
+                placeholder="ENTER_COMMAND_OR_MESSAGE..."
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 disabled={chatLoading}
               />
               <button
                 type="submit"
-                className="p-2 rounded-lg bg-gray-600/80 hover:bg-gray-700/80 border border-gray-500/60 flex items-center justify-center transition-all duration-200 backdrop-blur-sm shadow-lg disabled:opacity-50"
+                className="px-4 bg-white text-black hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:hover:bg-white font-mono text-xs font-bold uppercase border-l border-white/20"
                 disabled={chatLoading || !chatInput.trim()}
                 tabIndex={-1}
                 aria-label="Send"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="white" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-7.5-15-7.5v6l10 1.5-10 1.5v6z" />
-                </svg>
+                Send
               </button>
             </form>
           </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
-  )
+  </div>
+)
 }
+
 
 export default Queue

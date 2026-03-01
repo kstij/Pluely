@@ -2,20 +2,56 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useQuery, useQueryClient } from "react-query"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism"
 
-import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
+// Custom Monochromatic Theme
+const monoStyle: any = {
+  ...prism,
+  "code[class*=\"language-\"]": { color: "#e5e5e5", textShadow: "none" },
+  "pre[class*=\"language-\"]": { color: "#e5e5e5", background: "#000000", textShadow: "none" },
+  comment: { color: "#666666", fontStyle: "italic" },
+  prolog: { color: "#666666" },
+  doctype: { color: "#666666" },
+  cdata: { color: "#666666" },
+  punctuation: { color: "#999999" },
+  property: { color: "#e5e5e5" },
+  tag: { color: "#e5e5e5" },
+  boolean: { color: "#e5e5e5" },
+  number: { color: "#e5e5e5" },
+  constant: { color: "#e5e5e5" },
+  symbol: { color: "#e5e5e5" },
+  deleted: { color: "#e5e5e5" },
+  selector: { color: "#e5e5e5" },
+  "attr-name": { color: "#e5e5e5" },
+  string: { color: "#a3a3a3" }, 
+  char: { color: "#a3a3a3" },
+  builtin: { color: "#e5e5e5" },
+  inserted: { color: "#e5e5e5" },
+  operator: { color: "#999999" },
+  entity: { color: "#e5e5e5" },
+  url: { color: "#e5e5e5" },
+  variable: { color: "#e5e5e5" },
+  atrule: { color: "#e5e5e5" },
+  "attr-value": { color: "#a3a3a3" },
+  function: { color: "#e5e5e5" },
+  "class-name": { color: "#e5e5e5" },
+  keyword: { color: "#ffffff", fontWeight: "bold" },
+  regex: { color: "#a3a3a3" },
+  important: { color: "#e5e5e5", fontWeight: "bold" },
+}
+
+import ScreenshotQueue from "../Queue/components/ScreenshotQueue"
 import {
   Toast,
   ToastDescription,
   ToastMessage,
   ToastTitle,
   ToastVariant
-} from "../components/ui/toast"
-import { ProblemStatementData } from "../types/solutions"
-import { AudioResult } from "../types/audio"
-import SolutionCommands from "../components/Solutions/SolutionCommands"
-import Debug from "./Debug"
+} from "../../shared/ui/toast"
+import { ProblemStatementData } from "../../types/solutions"
+import { AudioResult } from "../../types/audio"
+import SolutionCommands from "./components/SolutionCommands"
+import Debug from "../Debug/DebugPage"
 
 // (Using global ElectronAPI type from src/types/electron.d.ts)
 
@@ -28,18 +64,19 @@ export const ContentSection = ({
   content: React.ReactNode
   isLoading: boolean
 }) => (
-  <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+  <div className="space-y-3">
+    <h2 className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/10 pb-1">
       {title}
     </h2>
     {isLoading ? (
-      <div className="mt-4 flex">
-        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
-          Extracting problem statement...
+      <div className="mt-2 flex items-center space-x-2">
+        <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+          Analyzing Problem...
         </p>
       </div>
     ) : (
-      <div className="text-[13px] leading-[1.4] text-gray-100 max-w-[600px]">
+      <div className="text-xs font-mono leading-relaxed text-gray-300 max-w-[600px]">
         {content}
       </div>
     )}
@@ -54,30 +91,34 @@ const SolutionSection = ({
   content: React.ReactNode
   isLoading: boolean
 }) => (
-  <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+  <div className="space-y-3">
+    <h2 className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/10 pb-1">
       {title}
     </h2>
     {isLoading ? (
-      <div className="space-y-1.5">
-        <div className="mt-4 flex">
-          <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
-            Loading solutions...
+      <div className="space-y-2">
+        <div className="mt-2 flex items-center space-x-2">
+          <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+          <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+            Generating Solution...
           </p>
         </div>
       </div>
     ) : (
-      <div className="w-full">
+      <div className="w-full border border-white/20">
         <SyntaxHighlighter
           showLineNumbers
           language="python"
-          style={dracula}
+          style={monoStyle}
           customStyle={{
             maxWidth: "100%",
             margin: 0,
             padding: "1rem",
             whiteSpace: "pre-wrap",
-            wordBreak: "break-all"
+            wordBreak: "break-all",
+            backgroundColor: "#000000",
+            fontSize: "11px",
+            fontFamily: "monospace"
           }}
           wrapLongLines={true}
         >
@@ -97,27 +138,26 @@ export const ComplexitySection = ({
   spaceComplexity: string | null
   isLoading: boolean
 }) => (
-  <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
-      Complexity (Updated)
+  <div className="space-y-3">
+    <h2 className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/10 pb-1">
+      Complexity Analysis
     </h2>
     {isLoading ? (
-      <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
-        Calculating complexity...
-      </p>
+       <div className="mt-2 flex items-center space-x-2">
+        <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+          Calculating...
+        </p>
+      </div>
     ) : (
-      <div className="space-y-1">
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
-          <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-          <div>
-            <strong>Time:</strong> {timeComplexity}
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col space-y-1 p-2 border border-white/10 bg-white/5">
+          <span className="text-[10px] font-mono text-gray-500 uppercase">Time</span>
+          <span className="text-xs font-mono text-white">{timeComplexity || "N/A"}</span>
         </div>
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
-          <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-          <div>
-            <strong>Space:</strong> {spaceComplexity}
-          </div>
+        <div className="flex flex-col space-y-1 p-2 border border-white/10 bg-white/5">
+          <span className="text-[10px] font-mono text-gray-500 uppercase">Space</span>
+          <span className="text-xs font-mono text-white">{spaceComplexity || "N/A"}</span>
         </div>
       </div>
     )}
@@ -480,14 +520,16 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
           )}
 
           {/* Navbar of commands with the SolutionsHelper */}
-          <SolutionCommands
-            extraScreenshots={extraScreenshots}
-            onTooltipVisibilityChange={handleTooltipVisibilityChange}
-          />
+          <div className="w-fit mx-auto">
+            <SolutionCommands
+              extraScreenshots={extraScreenshots}
+              onTooltipVisibilityChange={handleTooltipVisibilityChange}
+            />
+          </div>
 
           {/* Main Content - Modified width constraints */}
-          <div className="w-full text-sm text-black bg-black/60 rounded-md">
-            <div className="rounded-lg overflow-hidden">
+          <div className="w-full text-sm text-white bg-black border border-white/20">
+            <div className="">
               <div className="px-4 py-3 space-y-4 max-w-full">
                 {/* Show Screenshot or Audio Result as main output if validation_type is manual */}
                 {problemStatementData?.validation_type === "manual" ? (
@@ -506,8 +548,9 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                     />
                     {/* Show loading state when waiting for solution */}
                     {problemStatementData && !solutionData && (
-                      <div className="mt-4 flex">
-                        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+                      <div className="mt-4 flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
                           {problemStatementData?.output_format?.subtype === "voice" 
                             ? "Processing voice input..." 
                             : "Generating solutions..."}
@@ -528,8 +571,8 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                                       key={index}
                                       className="flex items-start gap-2"
                                     >
-                                      <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-                                      <div>{thought}</div>
+                                      <div className="w-1.5 h-1.5 bg-gray-500 mt-1.5 shrink-0" />
+                                      <div className="font-mono text-xs text-gray-300 leading-relaxed">{thought}</div>
                                     </div>
                                   ))}
                                 </div>
