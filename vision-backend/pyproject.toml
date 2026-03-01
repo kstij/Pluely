@@ -1,7 +1,7 @@
 [project]
-name = "cluely-vision-backend"
-version = "0.1.0"
-description = "Vision Agents backend for Cluely-like assistant"
+name = "pluely-vision-backend"
+version = "1.0.0"
+description = "Vision Agents backend for Pluely"
 requires-python = ">=3.10"
 dependencies = [
     "vision-agents[getstream,gemini,deepgram,elevenlabs]>=0.3.8",

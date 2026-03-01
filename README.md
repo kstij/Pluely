@@ -1,335 +1,220 @@
-# [Sponsored by Recall AI - API for desktop recording](https://www.recall.ai/product/desktop-recording-sdk?utm_source=github&utm_medium=sponsorship&utm_campaign=prat011-free-cluely)
-If you’re looking for a hosted desktop recording API, consider checking out [Recall.ai](https://www.recall.ai/product/desktop-recording-sdk?utm_source=github&utm_medium=sponsorship&utm_campaign=prat011-free-cluely), an API that records Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
+# Pluely
 
-# Cluely
+**Your invisible AI-powered desktop assistant for real-time insights during meetings, interviews, and presentations.**
 
-[Cluely](https://cluely.com) - The invisible desktop assistant that provides real-time insights, answers, and support during meetings, interviews, presentations, and professional conversations.
+Built with [GetStream Vision Agents](https://github.com/GetStream/Vision-Agents) for real-time video AI capabilities.
 
+---
 
-## 🚀 Quick Start Guide
+## Features
+
+- **Invisible Overlay** - Translucent window that stays on top without being intrusive
+- **Real-time Screen Analysis** - AI analyzes screenshots instantly using Vision Agents
+- **Multiple AI Providers** - Stream Vision Agents, Google Gemini, or local Ollama
+- **Voice Support** - Speech-to-text and text-to-speech capabilities
+- **Cross-Platform** - Works on macOS, Windows, and Linux
+- **Privacy-First** - Local AI option available, no data tracking
+
+---
+
+## Quick Start
 
 ### Prerequisites
-- Make sure you have Node.js installed on your computer
-- Git installed on your computer  
-- **Option 1:** Gemini API key (get it from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- **Option 2:** Ollama installed locally for private LLM usage
-- **Option 3 (Recommended for Hackathons):** Vision Agents with Stream API (see setup below)
 
-### Installation Steps
+- Node.js 18+
+- Python 3.10+ (for Vision Agents backend)
+- Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+- Stream API credentials from [getstream.io](https://getstream.io/) (free tier: 333k minutes/month)
 
-1. Clone the repository:
+### Installation
+
 ```bash
-git clone [repository-url]
-cd free-cluely
-```
+# Clone the repository
+git clone https://github.com/kstij/Pluely.git
+cd Pluely
 
-2. Install dependencies:
-```bash
-# If you encounter Sharp/Python build errors, use this:
-SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --ignore-scripts
-npm rebuild sharp
-
-# Or for normal installation:
+# Install Node dependencies
 npm install
-```
 
-3. Set up environment variables:
-   - Create a file named `.env` in the root folder
-   
-   **For Vision Agents (Recommended for Hackathons):**
-   ```env
-   USE_VISION_AGENTS=true
-   VISION_AGENT_URL=http://127.0.0.1:8765
-   GEMINI_API_KEY=your_api_key_here
-   ```
-   
-   **For Gemini (Cloud AI):**
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   ```
-   
-   **For Ollama (Local/Private AI):**
-   ```env
-   USE_OLLAMA=true
-   OLLAMA_MODEL=llama3.2
-   OLLAMA_URL=http://localhost:11434
-   ```
-   
-   - Save the file
-
-### Running the App
-
-#### Method 1: Development Mode (Recommended for first run)
-1. Start the development server:
-```bash
-npm start
-```
-
-This command automatically:
-- Starts the Vite dev server on port 5180
-- Waits for the server to be ready
-- Launches the Electron app
-
-#### Method 2: Production Build
-```bash
-npm run dist
-```
-The built app will be in the `release` folder.
-
-## 🤖 AI Provider Options
-
-### Ollama (Recommended for Privacy)
-**Pros:**
-- 100% private - data never leaves your computer
-- No API costs
-- Works offline
-- Supports many models: llama3.2, codellama, mistral, etc.
-
-**Setup:**
-1. Install Ollama from [ollama.ai](https://ollama.ai)
-2. Pull a model: `ollama pull llama3.2`
-3. Set environment variables as shown above
-
-### Google Gemini
-**Pros:**
-- Latest AI technology
-- Fastest responses
-- Best accuracy for complex tasks
-
-**Cons:**
-- Requires API key and internet
-- Data sent to Google servers
-- Usage costs apply
-
-### GetStream Vision Agents (Recommended for Hackathons)
-**Pros:**
-- Real-time video AI with <30ms latency
-- Built on Stream's edge network
-- Supports Gemini Realtime, OpenAI, and more
-- Voice interaction capabilities (STT/TTS)
-
-**Setup:**
-
-1. Install uv (Python package manager):
-```bash
+# Set up Vision Agents backend
+cd vision-backend
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
-```
-
-2. Set up the Vision backend:
-```bash
-cd vision-backend
-cp .env.example .env
-# Edit .env with your API keys (GEMINI_API_KEY required)
-```
-
-3. Install Python dependencies:
-```bash
 uv venv
 source .venv/bin/activate
 uv pip install fastapi uvicorn websockets python-dotenv pillow google-generativeai
 ```
 
-4. Configure root `.env`:
+### Configuration
+
+**1. Vision Backend** (`vision-backend/.env`):
+```env
+GEMINI_API_KEY=your_gemini_api_key
+STREAM_API_KEY=your_stream_api_key
+STREAM_API_SECRET=your_stream_api_secret
+HOST=127.0.0.1
+PORT=8765
+```
+
+**2. Electron App** (`.env` in root):
 ```env
 USE_VISION_AGENTS=true
 VISION_AGENT_URL=http://127.0.0.1:8765
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-**Running with Vision Agents:**
+### Running
 
+**Terminal 1 - Start Vision Backend:**
 ```bash
-# Terminal 1: Start Vision backend
 cd vision-backend
 source .venv/bin/activate
 python server.py
+```
 
-# Terminal 2: Start Electron app
+**Terminal 2 - Start Electron App:**
+```bash
 npm start
 ```
 
-Or use the combined command (requires both terminals):
-```bash
-npm run start:vision
-```
-
-**Verify it's working:**
+**Verify backend is running:**
 ```bash
 curl http://127.0.0.1:8765/health
-# Should return: {"status":"healthy","vision_agents":false,"gemini":true}
+# Returns: {"status":"healthy","vision_agents":false,"gemini":true}
 ```
-
-### ⚠️ Important Notes
-
-1. **Closing the App**: 
-   - Press `Cmd + Q` (Mac) or `Ctrl + Q` (Windows/Linux) to quit
-   - Or use Activity Monitor/Task Manager to close `Interview Coder`
-   - The X button currently doesn't work (known issue)
-
-2. **If the app doesn't start**:
-   - Make sure no other app is using port 5180
-   - Try killing existing processes:
-     ```bash
-     # Find processes using port 5180
-     lsof -i :5180
-     # Kill them (replace [PID] with the process ID)
-     kill [PID]
-     ```
-   - For Ollama users: Make sure Ollama is running (`ollama serve`)
-
-3. **Keyboard Shortcuts**:
-   - `Cmd/Ctrl + B`: Toggle window visibility
-   - `Cmd/Ctrl + H`: Take screenshot
-   - 'Cmd/Enter': Get solution
-   - `Cmd/Ctrl + Arrow Keys`: Move window
-
-## 🔧 Troubleshooting
-
-### Windows Issues Fixed 
-- **UI not loading**: Port mismatch resolved
-- **Electron crashes**: Improved error handling  
-- **Build failures**: Production config updated
-- **Window focus problems**: Platform-specific fixes applied
-
-### Ubuntu/Linux Issues Fixed 
-- **Window interaction**: Fixed focusable settings
-- **Installation confusion**: Clear setup instructions
-- **Missing dependencies**: All requirements documented
-
-### Common Solutions
-
-#### Sharp/Python Build Errors
-If you see `gyp ERR! find Python` or Sharp build errors:
-```bash
-# Solution 1: Use prebuilt binaries
-rm -rf node_modules package-lock.json
-SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --ignore-scripts
-npm rebuild sharp
-
-# Solution 2: Or install Python (if you prefer building from source)
-brew install python3  # macOS
-# Then run: npm install
-```
-
-#### General Installation Issues
-If you see other errors:
-1. Delete the `node_modules` folder
-2. Delete `package-lock.json` 
-3. Run `npm install` again
-4. Try running with `npm start`
-
-### Platform-Specific Notes
-- **Windows**: App now works on Windows 10/11
-- **Ubuntu/Linux**: Tested on Ubuntu 20.04+ and most Linux distros  
-- **macOS**: Native support with proper window management
-
-## Key Features
-
-### **Invisible AI Assistant**
-- Translucent, always-on-top window that's barely noticeable
-- Hide/show instantly with global hotkeys
-- Works seamlessly across all applications
-
-### **Smart Screenshot Analysis** 
-- Take screenshots of any content with `Cmd/Ctrl + H`
-- AI analyzes images, documents, presentations, or problems
-- Get instant explanations, answers, and solutions
-
-### **Audio Intelligence**
-- Process audio files and recordings
-- Real-time transcription and analysis
-- Perfect for meeting notes and content review
-
-### **Contextual Chat**
-- Chat with AI about anything you see on screen
-- Maintains conversation context
-- Ask follow-up questions for deeper insights
-
-### **Privacy-First Design**
-- **Local AI Option**: Use Ollama for 100% private processing
-- **Cloud Option**: Google Gemini for maximum performance
-- Screenshots auto-deleted after processing
-- No data tracking or storage
-
-### **Cross-Platform Support**
-- **Windows 10/11** - Full support with native performance
-- **Ubuntu/Linux** - Optimized for all major distributions  
-- **macOS** - Native window management and shortcuts
-
-## Use Cases
-
-### **Academic & Learning**
-```
-✓ Live presentation support during classes
-✓ Quick research during online exams  
-✓ Language translation and explanations
-✓ Math and science problem solving
-```
-
-### **Professional Meetings**
-```
-✓ Sales call preparation and objection handling
-✓ Technical interview coaching
-✓ Client presentation support
-✓ Real-time fact-checking and data lookup
-```
-
-### **Development & Tech**
-```
-✓ Debug error messages instantly
-✓ Code explanation and optimization
-✓ Documentation and API references
-✓ Algorithm and architecture guidance
-```
-
-## Why Choose Free Cluely?
-
-| Feature | Free Cluely | Commercial Alternatives |
-|---------|-------------|------------------------|
-| **Cost** | 100% Free | $29-99/month |
-| **Privacy** | Local AI Option | Cloud-only |
-| **Open Source** | Full transparency | Closed source |
-| **Customization** | Fully customizable | Limited options |
-| **Data Control** | You own your data | Third-party servers |
-| **Offline Mode** | Yes (with Ollama) | No |
-
-## Technical Details
-
-### **AI Models Supported**
-- **Gemini 2.0 Flash** - Latest Google AI with vision capabilities
-- **Llama 3.2** - Meta's advanced local model via Ollama
-- **CodeLlama** - Specialized coding assistance
-- **Mistral** - Lightweight, fast responses
-- **Custom Models** - Any Ollama-compatible model
-
-### **System Requirements**
-```bash
-Minimum:  4GB RAM, Dual-core CPU, 2GB storage
-Recommended: 8GB+ RAM, Quad-core CPU, 5GB+ storage
-Optimal: 16GB+ RAM for local AI models
-```
-
-## 🤝 Contributing
-
-This project welcomes contributions! While I have limited time for active maintenance, I'll review and merge quality PRs.
-
-**Ways to contribute:**
-- 🐛 Bug fixes and stability improvements
-- ✨ New features and AI model integrations  
-- 📚 Documentation and tutorial improvements
-- 🌍 Translations and internationalization
-- 🎨 UI/UX enhancements
-
-For commercial integrations or custom development, reach out on [Twitter](https://x.com/prathitjoshi_)
-
-## 📄 License
-
-ISC License - Free for personal and commercial use.
 
 ---
 
-**⭐ Star this repo if Free Cluely helps you succeed in meetings, interviews, or presentations!**
+## Keyboard Shortcuts
 
-### 🏷️ Tags
-`ai-assistant` `meeting-notes` `interview-helper` `presentation-support` `ollama` `gemini-ai` `electron-app` `cross-platform` `privacy-focused` `open-source` `local-ai` `screenshot-analysis` `academic-helper` `sales-assistant` `coding-companion`
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl + B` | Toggle window visibility |
+| `Cmd/Ctrl + H` | Take screenshot |
+| `Cmd/Ctrl + Enter` | Get AI solution |
+| `Cmd/Ctrl + Arrow Keys` | Move window |
+| `Cmd/Ctrl + Q` | Quit app |
+
+---
+
+## AI Provider Options
+
+### 1. Vision Agents + Gemini (Recommended)
+
+Real-time video AI powered by GetStream's Vision Agents with Gemini backend.
+
+```env
+USE_VISION_AGENTS=true
+VISION_AGENT_URL=http://127.0.0.1:8765
+GEMINI_API_KEY=your_key
+```
+
+### 2. Gemini Only
+
+Direct Google Gemini API without Vision Agents backend.
+
+```env
+GEMINI_API_KEY=your_key
+```
+
+### 3. Ollama (Local/Private)
+
+100% private - runs entirely on your machine.
+
+```env
+USE_OLLAMA=true
+OLLAMA_MODEL=llama3.2
+OLLAMA_URL=http://localhost:11434
+```
+
+Setup: `brew install ollama && ollama pull llama3.2`
+
+---
+
+## Project Structure
+
+```
+Pluely/
+├── electron/          # Electron main process
+│   ├── main.ts        # App entry point
+│   ├── LLMHelper.ts   # AI provider integration
+│   ├── VisionAgentHelper.ts  # Vision Agents client
+│   └── ProcessingHelper.ts   # Screenshot processing
+├── src/               # React frontend
+│   ├── App.tsx        # Main UI
+│   └── components/    # UI components
+├── vision-backend/    # Python Vision Agents server
+│   ├── server.py      # FastAPI server
+│   ├── agent.py       # Full Vision Agent
+│   └── .env           # Backend config
+└── .env               # Electron config
+```
+
+---
+
+## API Endpoints (Vision Backend)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/analyze` | POST | Analyze screenshot |
+| `/ws` | WebSocket | Real-time analysis |
+
+**Analyze endpoint:**
+```bash
+curl -X POST http://127.0.0.1:8765/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"image": "base64_encoded_image", "mime_type": "image/png"}'
+```
+
+---
+
+## Troubleshooting
+
+### Vision backend won't start
+```bash
+cd vision-backend
+source .venv/bin/activate
+python server.py
+```
+
+### Port already in use
+```bash
+lsof -i :5180  # Find process
+kill <PID>     # Kill it
+```
+
+### Sharp build errors
+```bash
+rm -rf node_modules package-lock.json
+SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install --ignore-scripts
+npm rebuild sharp
+```
+
+---
+
+## Tech Stack
+
+- **Frontend**: React, TypeScript, Tailwind CSS
+- **Desktop**: Electron
+- **AI Backend**: Python, FastAPI, GetStream Vision Agents
+- **AI Models**: Gemini 2.0 Flash, Ollama (Llama 3.2)
+- **Build**: Vite, electron-builder
+
+---
+
+## Built With
+
+- [GetStream Vision Agents](https://github.com/GetStream/Vision-Agents) - Real-time video AI framework
+- [Google Gemini](https://ai.google.dev/) - Multimodal AI
+- [Electron](https://www.electronjs.org/) - Cross-platform desktop apps
+
+---
+
+## License
+
+MIT License
+
+---
+
+**Made by [@kstij](https://github.com/kstij)**

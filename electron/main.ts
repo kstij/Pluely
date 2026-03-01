@@ -185,7 +185,7 @@ export class AppState {
   public createTray(): void {
     // Create a simple tray icon
     const image = nativeImage.createEmpty()
-    
+
     // Try to use a system template image for better integration
     let trayImage = image
     try {
@@ -195,12 +195,12 @@ export class AppState {
       console.log("Using empty tray image")
       trayImage = nativeImage.createEmpty()
     }
-    
+
     this.tray = new Tray(trayImage)
-    
+
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show Interview Coder',
+        label: 'Show Pluely',
         click: () => {
           this.centerAndShowWindow()
         }
@@ -243,15 +243,15 @@ export class AppState {
         }
       }
     ])
-    
-    this.tray.setToolTip('Interview Coder - Press Cmd+Shift+Space to show')
+
+    this.tray.setToolTip('Pluely - Press Cmd+Shift+Space to show')
     this.tray.setContextMenu(contextMenu)
-    
+
     // Set a title for macOS (will appear in menu bar)
     if (process.platform === 'darwin') {
-      this.tray.setTitle('IC')
+      this.tray.setTitle('P')
     }
-    
+
     // Double-click to show window
     this.tray.on('double-click', () => {
       this.centerAndShowWindow()

@@ -1,6 +1,8 @@
 {
-  "name": "interview-coder",
+  "name": "pluely",
   "version": "1.0.0",
+  "description": "Invisible AI-powered desktop assistant for real-time insights",
+  "author": "kstij",
   "main": "./dist-electron/main.js",
   "scripts": {
     "clean": "rimraf dist dist-electron",
@@ -21,8 +23,8 @@
     "vision:agent": "cd vision-backend && uv run python agent.py"
   },
   "build": {
-    "appId": "com.electron.meeting-notes",
-    "productName": "Meeting Notes Coder",
+    "appId": "com.pluely.app",
+    "productName": "Pluely",
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -100,8 +102,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "ibttf",
-        "repo": "interview-coder-frontend"
+        "owner": "kstij",
+        "repo": "Pluely"
       }
     ]
   },

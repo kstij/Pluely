@@ -38,7 +38,7 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 
-app = FastAPI(title="Cluely Vision Backend")
+app = FastAPI(title="Pluely Vision Backend")
 
 # CORS for Electron app
 app.add_middleware(
@@ -53,7 +53,7 @@ app.add_middleware(
 active_connections: list[WebSocket] = []
 
 # System prompt for analysis
-SYSTEM_PROMPT = """You are Cluely, an invisible AI assistant helping the user in real-time during interviews, meetings, and presentations.
+SYSTEM_PROMPT = """You are Pluely, an invisible AI assistant helping the user in real-time during interviews, meetings, and presentations.
 
 Analyze what you see on screen and provide:
 1. **Context**: What situation is the user in? (interview, meeting, presentation, etc.)
