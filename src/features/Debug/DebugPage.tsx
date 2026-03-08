@@ -2,17 +2,54 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useQuery, useQueryClient } from "react-query"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
-import { ComplexitySection, ContentSection } from "./Solutions"
-import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism"
+
+// Custom Monochromatic Theme
+const monoStyle: any = {
+  ...prism,
+  "code[class*=\"language-\"]": { color: "#e5e5e5", textShadow: "none" },
+  "pre[class*=\"language-\"]": { color: "#e5e5e5", background: "#000000", textShadow: "none" },
+  comment: { color: "#666666", fontStyle: "italic" },
+  prolog: { color: "#666666" },
+  doctype: { color: "#666666" },
+  cdata: { color: "#666666" },
+  punctuation: { color: "#999999" },
+  property: { color: "#e5e5e5" },
+  tag: { color: "#e5e5e5" },
+  boolean: { color: "#e5e5e5" },
+  number: { color: "#e5e5e5" },
+  constant: { color: "#e5e5e5" },
+  symbol: { color: "#e5e5e5" },
+  deleted: { color: "#e5e5e5" },
+  selector: { color: "#e5e5e5" },
+  "attr-name": { color: "#e5e5e5" },
+  string: { color: "#a3a3a3" }, 
+  char: { color: "#a3a3a3" },
+  builtin: { color: "#e5e5e5" },
+  inserted: { color: "#e5e5e5" },
+  operator: { color: "#999999" },
+  entity: { color: "#e5e5e5" },
+  url: { color: "#e5e5e5" },
+  variable: { color: "#e5e5e5" },
+  atrule: { color: "#e5e5e5" },
+  "attr-value": { color: "#a3a3a3" },
+  function: { color: "#e5e5e5" },
+  "class-name": { color: "#e5e5e5" },
+  keyword: { color: "#ffffff", fontWeight: "bold" },
+  regex: { color: "#a3a3a3" },
+  important: { color: "#e5e5e5", fontWeight: "bold" },
+}
+
+import { ComplexitySection, ContentSection } from "../Solutions/SolutionsPage"
+import ScreenshotQueue from "../Queue/components/ScreenshotQueue"
 import {
   Toast,
   ToastDescription,
   ToastMessage,
   ToastTitle,
   ToastVariant
-} from "../components/ui/toast"
-import ExtraScreenshotsQueueHelper from "../components/Solutions/SolutionCommands"
+} from "../../shared/ui/toast"
+import ExtraScreenshotsQueueHelper from "../Solutions/components/SolutionCommands"
 import { diffLines } from "diff"
 
 type DiffLine = {
@@ -100,101 +137,106 @@ const CodeComparisonSection = ({
     return { leftLines, rightLines }
   }
 
-  const { leftLines, rightLines } = computeDiff()
+    const { leftLines, rightLines } = computeDiff()
 
-  return (
-    <div className="space-y-1.5">
-      <h2 className="text-[13px] font-medium text-white tracking-wide">
-        Code Comparison
-      </h2>
-      {isLoading ? (
-        <div className="space-y-1">
-          <div className="mt-3 flex">
-            <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
-              Loading code comparison...
+    return (
+      <div className="space-y-3">
+        <h2 className="text-[10px] font-mono text-gray-500 uppercase tracking-widest border-b border-white/10 pb-1">
+          Code Comparison
+        </h2>
+        {isLoading ? (
+          <div className="mt-2 flex items-center space-x-2">
+            <div className="w-1.5 h-1.5 bg-white animate-pulse" />
+            <p className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+              Comparing versions...
             </p>
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-row gap-0.5 bg-[#161b22] rounded-lg overflow-hidden">
-          {/* Previous Code */}
-          <div className="w-1/2 border-r border-gray-700">
-            <div className="bg-[#2d333b] px-3 py-1.5">
-              <h3 className="text-[11px] font-medium text-gray-200">
-                Previous Version
-              </h3>
-            </div>
-            <div className="p-3 overflow-x-auto">
-              <SyntaxHighlighter
-                language="python"
-                style={dracula}
-                customStyle={{
-                  maxWidth: "100%",
-                  margin: 0,
-                  padding: "1rem",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-all"
-                }}
-                wrapLines={true}
-                showLineNumbers={true}
-                lineProps={(lineNumber) => {
-                  const line = leftLines[lineNumber - 1]
-                  return {
-                    style: {
-                      display: "block",
-                      backgroundColor: line?.removed
-                        ? "rgba(139, 0, 0, 0.2)"
-                        : "transparent"
+        ) : (
+          <div className="flex flex-row gap-px bg-white/10 border border-white/20">
+            {/* Previous Code */}
+            <div className="w-1/2 bg-black">
+              <div className="border-b border-white/10 px-3 py-1.5">
+                <h3 className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+                  Previous
+                </h3>
+              </div>
+              <div className="p-0 overflow-x-auto">
+                <SyntaxHighlighter
+                  language="python"
+                  style={monoStyle}
+                  customStyle={{
+                    maxWidth: "100%",
+                    margin: 0,
+                    padding: "1rem",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                    backgroundColor: "#000000",
+                    fontSize: "11px",
+                    fontFamily: "monospace"
+                  }}
+                  wrapLines={true}
+                  showLineNumbers={true}
+                  lineProps={(lineNumber) => {
+                    const line = leftLines[lineNumber - 1]
+                    return {
+                      style: {
+                        display: "block",
+                        backgroundColor: line?.removed
+                          ? "rgba(255, 0, 0, 0.15)"
+                          : "transparent"
+                      }
                     }
-                  }
-                }}
-              >
-                {leftLines.map((line) => line.value).join("\n")}
-              </SyntaxHighlighter>
+                  }}
+                >
+                  {leftLines.map((line) => line.value).join("\n")}
+                </SyntaxHighlighter>
+              </div>
+            </div>
+  
+            {/* New Code */}
+            <div className="w-1/2 bg-black">
+              <div className="border-b border-white/10 px-3 py-1.5">
+                <h3 className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+                  Current
+                </h3>
+              </div>
+              <div className="p-0 overflow-x-auto">
+                <SyntaxHighlighter
+                  language="python"
+                  style={monoStyle}
+                  customStyle={{
+                    maxWidth: "100%",
+                    margin: 0,
+                    padding: "1rem",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all",
+                    backgroundColor: "#000000",
+                    fontSize: "11px",
+                    fontFamily: "monospace"
+                  }}
+                  wrapLines={true}
+                  showLineNumbers={true}
+                  lineProps={(lineNumber) => {
+                    const line = rightLines[lineNumber - 1]
+                    return {
+                      style: {
+                        display: "block",
+                        backgroundColor: line?.added
+                          ? "rgba(0, 255, 0, 0.15)"
+                          : "transparent"
+                      }
+                    }
+                  }}
+                >
+                  {rightLines.map((line) => line.value).join("\n")}
+                </SyntaxHighlighter>
+              </div>
             </div>
           </div>
-
-          {/* New Code */}
-          <div className="w-1/2">
-            <div className="bg-[#2d333b] px-3 py-1.5">
-              <h3 className="text-[11px] font-medium text-gray-200">
-                New Version
-              </h3>
-            </div>
-            <div className="p-3 overflow-x-auto">
-              <SyntaxHighlighter
-                language="python"
-                style={dracula}
-                customStyle={{
-                  maxWidth: "100%",
-                  margin: 0,
-                  padding: "1rem",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-all"
-                }}
-                wrapLines={true}
-                showLineNumbers={true}
-                lineProps={(lineNumber) => {
-                  const line = rightLines[lineNumber - 1]
-                  return {
-                    style: {
-                      display: "block",
-                      backgroundColor: line?.added
-                        ? "rgba(0, 139, 0, 0.2)"
-                        : "transparent"
-                    }
-                  }
-                }}
-              >
-                {rightLines.map((line) => line.value).join("\n")}
-              </SyntaxHighlighter>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
+        )}
+      </div>
+    )
+  }
 
 interface DebugProps {
   isProcessing: boolean
@@ -366,26 +408,28 @@ const Debug: React.FC<DebugProps> = ({ isProcessing, setIsProcessing }) => {
       </div>
 
       {/* Navbar of commands with the tooltip */}
-      <ExtraScreenshotsQueueHelper
-        extraScreenshots={extraScreenshots}
-        onTooltipVisibilityChange={handleTooltipVisibilityChange}
-      />
+      <div className="w-fit mx-auto">
+        <ExtraScreenshotsQueueHelper
+          extraScreenshots={extraScreenshots}
+          onTooltipVisibilityChange={handleTooltipVisibilityChange}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="w-full text-sm text-black bg-black/60 rounded-md">
-        <div className="rounded-lg overflow-hidden">
+      <div className="w-full text-sm text-white bg-black border border-white/20">
+        <div className="">
           <div className="px-4 py-3 space-y-4">
             {/* Thoughts Section */}
             <ContentSection
-              title="What I Changed"
+              title="Change Log"
               content={
                 thoughtsData && (
                   <div className="space-y-3">
                     <div className="space-y-1">
                       {thoughtsData.map((thought, index) => (
                         <div key={index} className="flex items-start gap-2">
-                          <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-                          <div>{thought}</div>
+                          <div className="w-1.5 h-1.5 bg-gray-500 mt-1.5 shrink-0" />
+                          <div className="font-mono text-xs text-gray-300 leading-relaxed">{thought}</div>
                         </div>
                       ))}
                     </div>

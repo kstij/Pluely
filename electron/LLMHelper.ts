@@ -21,7 +21,7 @@ export class LLMHelper {
   private readonly systemPrompt = `You are Pluely, an invisible AI assistant helping users in real-time during interviews, meetings, and presentations. For any user input, analyze the situation, provide a clear problem statement, relevant context, and suggest several possible responses or actions the user could take next. Always explain your reasoning. Present your suggestions as a list of options or next steps.`
   private useOllama: boolean = false
   private useVisionAgents: boolean = false
-  private ollamaModel: string = "llama3.2"
+  private ollamaModel: string = "qwen3-coder:480b-cloud"
   private ollamaUrl: string = "http://localhost:11434"
   private visionAgentHelper: VisionAgentHelper | null = null
   private visionAgentUrl: string = "http://127.0.0.1:8765"
@@ -51,7 +51,7 @@ export class LLMHelper {
       }
     } else if (useOllama) {
       this.ollamaUrl = ollamaUrl || "http://localhost:11434"
-      this.ollamaModel = ollamaModel || "gemma:latest" // Default fallback
+      this.ollamaModel = ollamaModel || "qwen3-coder:480b-cloud" // Default fallback
       console.log(`[LLMHelper] Using Ollama with model: ${this.ollamaModel}`)
 
       // Auto-detect and use first available model if specified model doesn't exist
@@ -62,6 +62,81 @@ export class LLMHelper {
       console.log("[LLMHelper] Using Google Gemini")
     } else {
       throw new Error("Either provide Gemini API key, enable Ollama mode, or enable Vision Agents")
+    }
+  }
+
+  public getCurrentConfig() {
+    return {
+      provider: this.useOllama ? "ollama" : "gemini",
+      model: this.useOllama ? this.ollamaModel : "gemini-2.0-flash",
+      isOllama: this.useOllama
+    }
+  }
+
+  public async getOllamaModels(): Promise<string[]> {
+    try {
+      const response = await fetch(`${this.ollamaUrl}/api/tags`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`)
+      }
+      const data: any = await response.json()
+      return data.models.map((m: any) => m.name)
+    } catch (error) {
+      console.error("[LLMHelper] Error fetching Ollama models:", error)
+      return []
+    }
+  }
+
+  public async switchToOllama(model?: string, url?: string): Promise<void> {
+    this.useOllama = true
+    if (url) this.ollamaUrl = url
+
+    if (model) {
+      this.ollamaModel = model
+    } else {
+      await this.initializeOllamaModel()
+    }
+    console.log(`[LLMHelper] Switched to Ollama: ${this.ollamaModel} at ${this.ollamaUrl}`)
+  }
+
+  public async switchToGemini(apiKey?: string): Promise<void> {
+    if (apiKey) {
+      const genAI = new GoogleGenerativeAI(apiKey)
+      this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+    }
+
+    if (!this.model) {
+       throw new Error("No Gemini API key provided and no existing model instance. Please provide an API Key.")
+    }
+
+    this.useOllama = false
+    console.log("[LLMHelper] Switched to Gemini")
+  }
+
+  public async testConnection(): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (this.useOllama) {
+        const available = await this.checkOllamaAvailable()
+        if (!available) {
+          return { success: false, error: `Ollama not available at ${this.ollamaUrl}` }
+        }
+        await this.callOllama("Hello")
+        return { success: true }
+      } else {
+        if (!this.model) {
+          return { success: false, error: "No Gemini model configured" }
+        }
+        const result = await this.model.generateContent("Hello")
+        const response = await result.response
+        if (response.text()) {
+          return { success: true }
+        } else {
+          return { success: false, error: "Empty response from Gemini" }
+        }
+      }
+    } catch (error: any) {
+      console.error("Connection test failed:", error)
+      return { success: false, error: error.message }
     }
   }
 
@@ -400,21 +475,6 @@ export class LLMHelper {
     return this.useOllama;
   }
 
-  public async getOllamaModels(): Promise<string[]> {
-    if (!this.useOllama) return [];
-
-    try {
-      const response = await fetch(`${this.ollamaUrl}/api/tags`);
-      if (!response.ok) throw new Error('Failed to fetch models');
-
-      const data = await response.json();
-      return data.models?.map((model: any) => model.name) || [];
-    } catch (error) {
-      console.error("[LLMHelper] Error fetching Ollama models:", error);
-      return [];
-    }
-  }
-
   public getCurrentProvider(): "ollama" | "gemini" | "vision-agents" {
     if (this.useVisionAgents) return "vision-agents";
     return this.useOllama ? "ollama" : "gemini";
@@ -445,62 +505,5 @@ export class LLMHelper {
     this.useVisionAgents = true;
     this.useOllama = false;
     console.log(`[LLMHelper] Switched to Vision Agents at ${this.visionAgentUrl}`);
-  }
-
-  public async switchToOllama(model?: string, url?: string): Promise<void> {
-    this.useOllama = true;
-    if (url) this.ollamaUrl = url;
-
-    if (model) {
-      this.ollamaModel = model;
-    } else {
-      // Auto-detect first available model
-      await this.initializeOllamaModel();
-    }
-
-    console.log(`[LLMHelper] Switched to Ollama: ${this.ollamaModel} at ${this.ollamaUrl}`);
-  }
-
-  public async switchToGemini(apiKey?: string): Promise<void> {
-    if (apiKey) {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      this.model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    }
-
-    if (!this.model && !apiKey) {
-      throw new Error("No Gemini API key provided and no existing model instance");
-    }
-
-    this.useOllama = false;
-    console.log("[LLMHelper] Switched to Gemini");
-  }
-
-  public async testConnection(): Promise<{ success: boolean; error?: string }> {
-    try {
-      if (this.useOllama) {
-        const available = await this.checkOllamaAvailable();
-        if (!available) {
-          return { success: false, error: `Ollama not available at ${this.ollamaUrl}` };
-        }
-        // Test with a simple prompt
-        await this.callOllama("Hello");
-        return { success: true };
-      } else {
-        if (!this.model) {
-          return { success: false, error: "No Gemini model configured" };
-        }
-        // Test with a simple prompt
-        const result = await this.model.generateContent("Hello");
-        const response = await result.response;
-        const text = response.text(); // Ensure the response is valid
-        if (text) {
-          return { success: true };
-        } else {
-          return { success: false, error: "Empty response from Gemini" };
-        }
-      }
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
   }
 } 
